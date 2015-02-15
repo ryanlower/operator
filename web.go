@@ -3,22 +3,15 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 )
-
-func envOrDefault(key string, defaultValue string) string {
-	if env := os.Getenv(key); env != "" {
-		return env
-	}
-	return defaultValue
-}
 
 func main() {
 	operator := new(Operator)
+	operator.config = new(Config)
+	operator.config.load()
 
-	port := envOrDefault("PORT", "3000")
-	log.Printf("Operator listening on port %v ...", port)
-	err := http.ListenAndServe(":"+port, operator)
+	log.Printf("Operator listening on port %v ...", operator.config.port)
+	err := http.ListenAndServe(":"+operator.config.port, operator)
 	if err != nil {
 		panic(err)
 	}

@@ -4,7 +4,6 @@ import (
 	// "log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,6 +11,8 @@ import (
 
 func setup() (*Operator, *httptest.ResponseRecorder) {
 	operator := new(Operator)
+	operator.config = new(Config)
+	operator.config.redis.port = "6379"
 	operator.connect()
 	recorder := httptest.NewRecorder()
 
@@ -82,10 +83,8 @@ func TestLookupBadToken(t *testing.T) {
 }
 
 func TestCreationAuthenticationBadAuth(t *testing.T) {
-	os.Setenv("AUTH_PASSWORD", "password")
-	defer os.Unsetenv("AUTH_PASSWORD")
-
 	operator, w := setup()
+	operator.config.auth.password = "password"
 	removeLink(operator, "token")
 
 	req, _ := http.NewRequest("POST", "/token?url=url", nil)
@@ -94,10 +93,8 @@ func TestCreationAuthenticationBadAuth(t *testing.T) {
 }
 
 func TestCreationAuthenticationGoodAuth(t *testing.T) {
-	os.Setenv("AUTH_PASSWORD", "password")
-	defer os.Unsetenv("AUTH_PASSWORD")
-
 	operator, w := setup()
+	operator.config.auth.password = "password"
 	removeLink(operator, "token")
 
 	req, _ := http.NewRequest("POST", "/token?url=url", nil)
