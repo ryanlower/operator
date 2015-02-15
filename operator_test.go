@@ -1,8 +1,10 @@
 package main
 
 import (
+	// "log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,12 +18,22 @@ func setup() (*Operator, *httptest.ResponseRecorder) {
 	return operator, recorder
 }
 
+// Add link to redis
+func addLink(o *Operator, token, url string) {
+	o.connection.Do("SET", token, url)
+}
+
+// Remove link in redis
+func removeLink(o *Operator, token string) {
+	o.connection.Do("DEL", token)
+}
+
 func TestCreationNewToken(t *testing.T) {
 	token := "ryan"
 	url := "http://ryanlower.com"
 
 	operator, w := setup()
-	operator.connection.Do("DEL", token) // Ensure token doesn't exist
+	removeLink(operator, token)
 
 	req, _ := http.NewRequest("POST", "/"+token+"?url="+url, nil)
 	operator.create(w, req)
@@ -34,7 +46,7 @@ func TestCreationExistingToken(t *testing.T) {
 	url := "http://ryanlower.com"
 
 	operator, w := setup()
-	operator.connection.Do("SET", token, url) // Ensure token exists
+	addLink(operator, token, url)
 
 	req, _ := http.NewRequest("POST", "/"+token+"?url="+url, nil)
 	operator.create(w, req)
@@ -47,7 +59,7 @@ func TestLookup(t *testing.T) {
 	token := "good_token"
 
 	operator, w := setup()
-	operator.connection.Do("SET", token, "http://ryanlower.com")
+	addLink(operator, token, "http://ryanlower.com")
 
 	req, _ := http.NewRequest("GET", "/"+token, nil)
 	operator.lookup(w, req)
@@ -60,11 +72,36 @@ func TestLookupBadToken(t *testing.T) {
 	token := "bad_token"
 
 	operator, w := setup()
-	operator.connection.Do("DEL", token)
+	removeLink(operator, token)
 
 	req, _ := http.NewRequest("GET", "/"+token, nil)
 	operator.lookup(w, req)
 
 	assert.Equal(t, w.Code, http.StatusNotFound)
 	assert.Equal(t, w.Body.String(), "Token not found\n")
+}
+
+func TestCreationAuthenticationBadAuth(t *testing.T) {
+	os.Setenv("AUTH_PASSWORD", "password")
+	defer os.Unsetenv("AUTH_PASSWORD")
+
+	operator, w := setup()
+	removeLink(operator, "token")
+
+	req, _ := http.NewRequest("POST", "/token?url=url", nil)
+	operator.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestCreationAuthenticationGoodAuth(t *testing.T) {
+	os.Setenv("AUTH_PASSWORD", "password")
+	defer os.Unsetenv("AUTH_PASSWORD")
+
+	operator, w := setup()
+	removeLink(operator, "token")
+
+	req, _ := http.NewRequest("POST", "/token?url=url", nil)
+	req.SetBasicAuth("", "password")
+	operator.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
 }

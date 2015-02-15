@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/garyburd/redigo/redis"
 )
@@ -13,14 +14,16 @@ type Operator struct {
 }
 
 func (o *Operator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
 	// Init Operator connection if needed
 	if o.connection == nil {
 		o.connect()
 	}
 
 	if r.Method == "POST" {
+		if !o.authenticated(r) {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
 		o.create(w, r)
 	} else {
 		o.lookup(w, r)
@@ -38,6 +41,20 @@ func (o *Operator) connect() {
 	}
 
 	o.connection = conn
+}
+
+// Is this request authenticated?
+// Returns true if AUTH_PASSWORD is set and provided password matches
+// or if AUTH_PASSWORD is not set
+// Returns false if AUTH_PASSWORD is set and password doesn't match
+func (o *Operator) authenticated(r *http.Request) bool {
+	auth := os.Getenv("AUTH_PASSWORD")
+
+	_, password, _ := r.BasicAuth()
+	if auth != "" && auth != password {
+		return false
+	}
+	return true
 }
 
 // Create token in redis, with url as value
