@@ -12,7 +12,7 @@ import (
 func setup() (*Operator, *httptest.ResponseRecorder) {
 	operator := new(Operator)
 	operator.config = new(Config)
-	operator.config.redis.port = "6379"
+	operator.config.redis.address = "localhost:6379"
 	operator.connect()
 	recorder := httptest.NewRecorder()
 

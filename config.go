@@ -11,7 +11,7 @@ type Config struct {
 		password string
 	}
 	redis struct {
-		port string
+		address string
 	}
 }
 
@@ -19,7 +19,7 @@ type Config struct {
 func (c *Config) load() {
 	c.port = envOrDefault("PORT", "3000")
 	c.auth.password = os.Getenv("AUTH_PASSWORD")
-	c.redis.port = envOrDefault("REDIS_PORT", "6379")
+	c.redis.address = envOrDefault("REDIS_ADDRESS", "localhost:6379")
 }
 
 func envOrDefault(key string, defaultValue string) string {

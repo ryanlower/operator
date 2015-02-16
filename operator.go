@@ -34,7 +34,7 @@ func (o *Operator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Defaults to connecting on local redis (port 6379)
 // This can be customised using REDIS_PORT
 func (o *Operator) connect() {
-	conn, err := redis.Dial("tcp", ":"+o.config.redis.port)
+	conn, err := redis.Dial("tcp", o.config.redis.address)
 	if err != nil {
 		panic(err) // Can't do much without a redis connection
 	}
