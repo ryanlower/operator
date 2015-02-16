@@ -8,10 +8,11 @@ import (
 type Config struct {
 	port string
 	auth struct {
-		password string
+		password string // optional for HTTP basic auth for link creation
 	}
 	redis struct {
-		port string
+		address  string
+		password string // optional for redis AUTH
 	}
 }
 
@@ -19,7 +20,8 @@ type Config struct {
 func (c *Config) load() {
 	c.port = envOrDefault("PORT", "3000")
 	c.auth.password = os.Getenv("AUTH_PASSWORD")
-	c.redis.port = envOrDefault("REDIS_PORT", "6379")
+	c.redis.address = envOrDefault("REDIS_ADDRESS", "localhost:6379")
+	c.redis.password = os.Getenv("REDIS_PASSWORD")
 }
 
 func envOrDefault(key string, defaultValue string) string {
