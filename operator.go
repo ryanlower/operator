@@ -39,6 +39,12 @@ func (o *Operator) connect() {
 		panic(err) // Can't do much without a redis connection
 	}
 
+	// AUTH if config specifies redis passwoed
+	log.Print(o.config.redis.password)
+	if o.config.redis.password != "" {
+		conn.Do("AUTH", o.config.redis.password)
+	}
+
 	o.connection = conn
 }
 
