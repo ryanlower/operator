@@ -9,6 +9,10 @@
 		{
 			"ImportPath": "github.com/garyburd/redigo/redis",
 			"Rev": "785e0ca9319196b94fd61abd4c9eab5c11777377"
+		},
+		{
+			"ImportPath": "github.com/ryanlower/setting",
+			"Rev": "80fc0b7a27f1882562fff55a12fa15d59bdcc978"
 		}
 	]
 }
