@@ -10,8 +10,8 @@ func main() {
 	operator.config = new(Config)
 	operator.config.load()
 
-	log.Printf("Operator listening on port %v ...", operator.config.port)
-	err := http.ListenAndServe(":"+operator.config.port, operator)
+	log.Printf("Operator listening on port %v ...", operator.config.Port)
+	err := http.ListenAndServe(":"+operator.config.Port, operator)
 	if err != nil {
 		panic(err)
 	}

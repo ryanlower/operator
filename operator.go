@@ -34,15 +34,15 @@ func (o *Operator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Defaults to connecting on local redis (port 6379)
 // This can be customised using REDIS_PORT
 func (o *Operator) connect() {
-	conn, err := redis.Dial("tcp", o.config.redis.address)
+	conn, err := redis.Dial("tcp", o.config.Redis.Address)
 	if err != nil {
 		panic(err) // Can't do much without a redis connection
 	}
 
 	// AUTH if config specifies redis passwoed
-	log.Print(o.config.redis.password)
-	if o.config.redis.password != "" {
-		conn.Do("AUTH", o.config.redis.password)
+	log.Print(o.config.Redis.Password)
+	if o.config.Redis.Password != "" {
+		conn.Do("AUTH", o.config.Redis.Password)
 	}
 
 	o.connection = conn
@@ -53,10 +53,10 @@ func (o *Operator) connect() {
 // or if AUTH_PASSWORD is not set
 // Returns false if AUTH_PASSWORD is set and password doesn't match
 func (o *Operator) authenticated(r *http.Request) bool {
-	log.Print(o.config.auth.password)
+	log.Print(o.config.Auth.Password)
 
 	_, password, _ := r.BasicAuth()
-	if o.config.auth.password != "" && o.config.auth.password != password {
+	if o.config.Auth.Password != "" && o.config.Auth.Password != password {
 		return false
 	}
 	return true

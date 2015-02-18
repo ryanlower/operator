@@ -12,7 +12,7 @@ import (
 func setup() (*Operator, *httptest.ResponseRecorder) {
 	operator := new(Operator)
 	operator.config = new(Config)
-	operator.config.redis.address = "localhost:6379"
+	operator.config.Redis.Address = "localhost:6379"
 	operator.connect()
 	recorder := httptest.NewRecorder()
 
@@ -84,7 +84,7 @@ func TestLookupBadToken(t *testing.T) {
 
 func TestCreationAuthenticationBadAuth(t *testing.T) {
 	operator, w := setup()
-	operator.config.auth.password = "password"
+	operator.config.Auth.Password = "password"
 	removeLink(operator, "token")
 
 	req, _ := http.NewRequest("POST", "/token?url=url", nil)
@@ -94,7 +94,7 @@ func TestCreationAuthenticationBadAuth(t *testing.T) {
 
 func TestCreationAuthenticationGoodAuth(t *testing.T) {
 	operator, w := setup()
-	operator.config.auth.password = "password"
+	operator.config.Auth.Password = "password"
 	removeLink(operator, "token")
 
 	req, _ := http.NewRequest("POST", "/token?url=url", nil)

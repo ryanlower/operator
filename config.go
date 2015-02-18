@@ -1,32 +1,23 @@
 package main
 
 import (
-	"os"
+	"github.com/ryanlower/setting"
 )
 
 // Config ...
 type Config struct {
-	port string
-	auth struct {
-		password string // optional for HTTP basic auth for link creation
+	Port string `env:"PORT" default:"3000"`
+	Auth struct {
+		// optional for HTTP basic auth for link creation
+		Password string `env:"AUTH_PASSWORD"`
 	}
-	redis struct {
-		address  string
-		password string // optional for redis AUTH
+	Redis struct {
+		Address  string `env:"REDIS_ADDRESS" default:"localhost:6379"`
+		Password string `env:"REDIS_PASSWORD"` // optional for redis AUTH
 	}
 }
 
 // Load config from environment
 func (c *Config) load() {
-	c.port = envOrDefault("PORT", "3000")
-	c.auth.password = os.Getenv("AUTH_PASSWORD")
-	c.redis.address = envOrDefault("REDIS_ADDRESS", "localhost:6379")
-	c.redis.password = os.Getenv("REDIS_PASSWORD")
-}
-
-func envOrDefault(key string, defaultValue string) string {
-	if env := os.Getenv(key); env != "" {
-		return env
-	}
-	return defaultValue
+	setting.Load(c)
 }
