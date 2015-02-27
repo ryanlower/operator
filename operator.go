@@ -3,22 +3,15 @@ package main
 import (
 	"log"
 	"net/http"
-
-	"github.com/garyburd/redigo/redis"
 )
 
 // Operator is a ...
 type Operator struct {
-	config     *Config
-	connection redis.Conn
+	config *Config
+	store  Store
 }
 
 func (o *Operator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Init Operator connection if needed
-	if o.connection == nil {
-		o.connect()
-	}
-
 	if r.Method == "POST" {
 		if !o.authenticated(r) {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
@@ -28,24 +21,6 @@ func (o *Operator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		o.lookup(w, r)
 	}
-}
-
-// Setup redis connection
-// Defaults to connecting on local redis (port 6379)
-// This can be customised using REDIS_PORT
-func (o *Operator) connect() {
-	conn, err := redis.Dial("tcp", o.config.Redis.Address)
-	if err != nil {
-		panic(err) // Can't do much without a redis connection
-	}
-
-	// AUTH if config specifies redis passwoed
-	log.Print(o.config.Redis.Password)
-	if o.config.Redis.Password != "" {
-		conn.Do("AUTH", o.config.Redis.Password)
-	}
-
-	o.connection = conn
 }
 
 // Is this request authenticated?
@@ -62,31 +37,31 @@ func (o *Operator) authenticated(r *http.Request) bool {
 	return true
 }
 
-// Create token in redis, with url as value
+// Create token in store, with url as value
 // Returns 200 if token created successfully
 // Returns 400 bad request if not
 func (o *Operator) create(w http.ResponseWriter, r *http.Request) {
 	token := o.parseToken(r)
 	url := r.FormValue("url")
 
-	reply, _ := redis.Int(o.connection.Do("SETNX", token, url))
-	if reply != 1 {
-		http.Error(w, "Token already used", http.StatusBadRequest)
+	err := o.store.Set(token, url)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 }
 
-// Lookup url by token
+// Lookup url by token in store
 // Redirects to url if found
 // Returns 404 not found if not
 func (o *Operator) lookup(w http.ResponseWriter, r *http.Request) {
 	token := o.parseToken(r)
 
-	url, _ := redis.String(o.connection.Do("GET", token))
-	if url == "" {
-		http.Error(w, "Token not found", http.StatusNotFound)
+	url, err := o.store.Get(token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 

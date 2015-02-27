@@ -10,23 +10,27 @@ import (
 )
 
 func setup() (*Operator, *httptest.ResponseRecorder) {
-	operator := new(Operator)
-	operator.config = new(Config)
-	operator.config.Redis.Address = "localhost:6379"
-	operator.connect()
+	conf := new(Config)
+	conf.Redis.Address = "localhost:6379"
+
+	// TODO, use test store so we don't need to touch redis
+	store := &RedisStore{config: conf}
+	store.connect()
+
+	operator := &Operator{config: conf, store: store}
 	recorder := httptest.NewRecorder()
 
 	return operator, recorder
 }
 
-// Add link to redis
+// Add link to store
 func addLink(o *Operator, token, url string) {
-	o.connection.Do("SET", token, url)
+	o.store.Set(token, url)
 }
 
-// Remove link in redis
+// Remove link from store
 func removeLink(o *Operator, token string) {
-	o.connection.Do("DEL", token)
+	o.store.Delete(token)
 }
 
 func TestCreationNewToken(t *testing.T) {

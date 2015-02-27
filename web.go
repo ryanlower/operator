@@ -6,12 +6,14 @@ import (
 )
 
 func main() {
-	operator := new(Operator)
-	operator.config = new(Config)
-	operator.config.load()
+	conf := new(Config)
+	conf.load()
 
-	log.Printf("Operator listening on port %v ...", operator.config.Port)
-	err := http.ListenAndServe(":"+operator.config.Port, operator)
+	store := &RedisStore{config: conf}
+	operator := &Operator{config: conf, store: store}
+
+	log.Printf("Operator listening on port %v ...", conf.Port)
+	err := http.ListenAndServe(":"+conf.Port, operator)
 	if err != nil {
 		panic(err)
 	}
