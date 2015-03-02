@@ -10,7 +10,6 @@ import (
 type Store interface {
 	Get(token string) (string, error)
 	Set(token, url string) error
-	Delete(token string)
 }
 
 // RedisStore is a redis backed Store
@@ -44,12 +43,6 @@ func (s *RedisStore) Get(token string) (string, error) {
 		return reply, errors.New("Token not found")
 	}
 	return reply, nil
-}
-
-// Delete ...
-// TODO, only used by tests
-func (s *RedisStore) Delete(token string) {
-	s.connection.Do("DEL", token)
 }
 
 func (s *RedisStore) connect() {
